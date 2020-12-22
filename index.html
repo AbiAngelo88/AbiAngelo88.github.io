@@ -1,38 +1,45 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset='utf-8'>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Ar Wokilab</title>
+  <head>
     <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <!-- we import arjs version without NFT but with marker + location based support -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script>
-      function calculate(){
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(function(position) {
-            console.log(position.coords.latitude, position.coords.longitude)
-        });
-          } else {
-            /* la geolocalizzazione NON È disponibile */
-          }
-      }
+      AFRAME.registerComponent('markerhandler', {
+        init: function () {
+          this.el.sceneEl.addEventListener('markerFound', (ev) => {
+            console.log('TRACK-FOUND', ev)
+          });
+          this.el.sceneEl.addEventListener('markerLost', (ev) => {
+            console.log('TRACK-LOST', ev)
+            ev.stopPropagation();
+            const model = ev.target.object3D;
+
+            const myScene = document.getElementById('my-scene');
+            const entity = document.createElement('a-entity');
+            entity.setAttribute('scale', `${0.05 * model.scale.x} ${0.05 * model.scale.y} ${0.05 * model.scale.z}`);
+            entity.setAttribute('position', `${model.position.x} ${model.position.y} ${model.position.z}`);
+            // entity.setAttribute('rotation', `${model.rotation.x} ${model.rotation.y} ${model.rotation.z}`);
+            entity.object3D.setRotationFromQuaternion(model.quaternion);
+            entity.setAttribute('gltf-model', "https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf");
+            // entity.object3D.applyQuaternion(model.quaternion);
+            entity.id = "my-model";
+            myScene.appendChild(entity);
+          });
+        }
+      });
     </script>
-</head>
+  </head>
 
-<body style='margin: 0; overflow: hidden;'>
-  <!-- <div>
-    <button onclick="calculate()">POSITION</button>
-  </div> -->
-    <a-scene vr-mode-ui="enabled: false" embedded arjs='sourceType: webcam; debugUIEnabled: false;'>
-      <a-text
-      value="This content will always face you."
-      look-at="[gps-camera]" gps-entity-place="longitude: 40.0793909; latitude: 16.2013461;"
-      scale="120 120 120">
-    </a-text>
-      <a-camera gps-camera rotation-reader></a-camera>
+  <body style="margin : 0px; overflow: hidden;">
+    <a-scene embedded arjs id="my-scene">
+      <a-marker preset="hiro">
+        <a-entity markerhandler 
+          scale="0.05 0.05 0.05"
+          gltf-model="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
+        ></a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
     </a-scene>
-
-</body>
-
+  </body>
 </html>
